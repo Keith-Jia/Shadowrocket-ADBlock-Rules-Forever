@@ -1,0 +1,50 @@
+#!name=additional
+#!desc=最后更新时间：2026-10-26
+#!homepage=https://www.ikkai.me
+#!author=Keith
+#!category=FUCKAD!!
+#!system=ios
+
+[URL Rewrite]
+# 豆瓣自身广告
+^https:\/\/api\.douban\.com\/v\d\/app_ads reject-dict
+^https:\/\/api\.douban\.com\/.*\/common_ads reject-dict
+^https?:\/\/frodo\.douban\.com\/api\/v2\/feature_switch reject-dict
+^https:\/\/frodo\.douban\.com\/api\/v\d\/erebor\/ reject-dict
+^https:\/\/frodo\.douban\.com\/api\/v\d\/home_banner reject-dict
+^https:\/\/frodo\.douban\.com\/api\/v\d\/home_ads reject-dict
+^https:\/\/frodo\.douban\.com\/api\/v\d\/movie\/ad reject-dict
+^https:\/\/frodo\.douban\.com\/api\/v\d\/search\/found_words reject-dict
+^https:\/\/m\.douban\.com\/rexxar\/api\/v\d\/market\/products\/ reject-dict
+^https:\/\/erebor\.douban\.com\/ reject-dict
+^https:\/\/.*\.douban\.com\/.*\/(count|redirect|stock) reject-dict
+
+# 豆瓣原模块中的第三方广告接口
+^https?:\/\/mssdk\.volces\.com reject-dict
+^https?:\/\/vod-license.*\.volccdn\.com reject-dict
+^https?:\/\/dg\.k\.jd\.com reject-dict
+^https?:\/\/webcast-open\.douyin\.com reject-dict
+
+# 掌盟：精确规则优先，保留 platstrongshell 的 reject-200 响应
+^https?:\/\/mlol\.qt\.qq\.com\/go\/recommend\/platstrongshell\? reject-200
+^https?:\/\/mlol\.qt\.qq\.com\/go\/recommend reject
+^https?:\/\/mlol\.qt\.qq\.com\/go\/club\/match\/get_ai_search_words$ reject-200
+^https?:\/\/mlol\.qt\.qq\.com\/go\/mlol_news\/search\/varcache_hotV\d\? reject-200
+^https?:\/\/mlol\.qt\.qq\.com\/go\/customize_search\/article_rank_tab\? reject-200
+^https?:\/\/mlol\.qt\.qq\.com\/go\/customize_search\/article_rank\? reject-200
+^https?:\/\/mlol\.qt\.qq\.com\/go\/zone\/bottomtab_tip\? reject-200
+
+[Rule]
+# 沿用豆瓣原模块的整域拦截，作用范围不限于豆瓣。
+# zijieapi.com 的后缀规则已覆盖 tnc3-alisc1.zijieapi.com，无需重复声明。
+DOMAIN-SUFFIX,zijieapi.com,REJECT
+DOMAIN-SUFFIX,volces.com,REJECT
+DOMAIN-SUFFIX,volccdn.com,REJECT
+
+[Map Local]
+# 掌盟开屏广告：沿用原模块，返回空白文本
+^https?:\/\/us\.l\.qq\.com\/exapp data-type=text data=" "
+^https?:\/\/ossweb-img\.qq\.com\/upload\/adw\/image\/[0-9]{3}\/202[0-9]{5}\/[a-z0-9]{32}\.(jpg|jpeg) data-type=text data=" "
+
+[MITM]
+hostname = %APPEND% api.douban.com, frodo.douban.com, m.douban.com, erebor.douban.com, dg.k.jd.com, webcast-open.douyin.com, tnc3-alisc1.zijieapi.com, mssdk.volces.com, vod-license-m.volccdn.com, us.l.qq.com, ossweb-img.qq.com, mlol.qt.qq.com
