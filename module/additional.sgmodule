@@ -1,5 +1,5 @@
 #!name=additional
-#!desc=最后更新时间：2026-10-26
+#!desc=最后更新时间：2026-10-27 23:08
 #!homepage=https://www.ikkai.me
 #!author=Keith
 #!category=FUCKAD!!
@@ -46,5 +46,19 @@ DOMAIN-SUFFIX,volccdn.com,REJECT
 ^https?:\/\/us\.l\.qq\.com\/exapp data-type=text data=" "
 ^https?:\/\/ossweb-img\.qq\.com\/upload\/adw\/image\/[0-9]{3}\/202[0-9]{5}\/[a-z0-9]{32}\.(jpg|jpeg) data-type=text data=" "
 
+[Body Rewrite]
+# 闲鱼：补充 Ultimate 缺少的广告判据和装饰图清理，不裁剪订单、频道或发布入口。
+# 仅处理 ret 成功的 MTop 响应；保留外层，兼容 data 为对象或 JSON 字符串，其他响应原样保留。
+# 同一响应的正文重写与 Ultimate 脚本是否同时执行，需在 Shadowrocket 设备上验证。
+
+# 搜索结果：仅移除明确标记 bizType=ad 的卡片。
+http-response-jq ^https?:\/\/(g-)?acs\.m\.goofish\.com\/gw\/mtop\.taobao\.idlemtopsearch\.search\/ 'def clean: if (.resultList | type) == "array" then .resultList |= map(select((try .data.item.main.exContent.dislikeFeedback.clickParam.args.bizType catch null) != "ad")) else . end; . as $o | try (if type != "object" then . elif (.ret | type) != "array" then . elif (.ret | length) == 0 then . elif any(.ret[]; if type == "string" then test("^SUCCESS(?:::|$)") | not else true end) then . elif (.data | type) == "object" then .data |= clean elif (.data | type) == "string" then .data |= (. as $s | fromjson | if type == "object" then . as $d | clean | if . == $d then $s else tojson end else $s end) else . end) catch $o'
+
+# 频道：仅删除标题装饰图、氛围图和右上角标签图，保留频道及其跳转信息。
+http-response-jq ^https?:\/\/(g-)?acs\.m\.goofish\.com\/gw\/mtop\.taobao\.idlehome\.home\.circle\.list\/ 'def trim($keys): if type == "object" then if (.showInfo | type) == "object" then .showInfo |= delpaths($keys | map([.])) else . end else . end; def clean: (if (.circleList | type) == "array" then .circleList |= map(trim(["titleImage", "atmosphereImageUrl"])) else . end) | if (.next | type) == "object" then if (.next.headList | type) == "array" then .next.headList |= map(trim(["rightTagImage"])) else . end else . end; . as $o | try (if type != "object" then . elif (.ret | type) != "array" then . elif (.ret | length) == 0 then . elif any(.ret[]; if type == "string" then test("^SUCCESS(?:::|$)") | not else true end) then . elif (.data | type) == "object" then .data |= clean elif (.data | type) == "string" then .data |= (. as $s | fromjson | if type == "object" then . as $d | clean | if . == $d then $s else tojson end else $s end) else . end) catch $o'
+
+# 同城：补充 template.cardEnum=ads 判据，保留其他类型的正常卡片。
+http-response-jq ^https?:\/\/(g-)?acs\.m\.goofish\.com\/gw\/mtop\.taobao\.idle\.local\.home\/ 'def clean: if (.sections | type) == "array" then .sections |= map(select((try .template.cardEnum catch null) != "ads")) else . end; . as $o | try (if type != "object" then . elif (.ret | type) != "array" then . elif (.ret | length) == 0 then . elif any(.ret[]; if type == "string" then test("^SUCCESS(?:::|$)") | not else true end) then . elif (.data | type) == "object" then .data |= clean elif (.data | type) == "string" then .data |= (. as $s | fromjson | if type == "object" then . as $d | clean | if . == $d then $s else tojson end else $s end) else . end) catch $o'
+
 [MITM]
-hostname = %APPEND% api.douban.com, frodo.douban.com, m.douban.com, erebor.douban.com, dg.k.jd.com, webcast-open.douyin.com, tnc3-alisc1.zijieapi.com, mssdk.volces.com, vod-license-m.volccdn.com, us.l.qq.com, ossweb-img.qq.com, mlol.qt.qq.com
+hostname = %APPEND% api.douban.com, frodo.douban.com, m.douban.com, erebor.douban.com, dg.k.jd.com, webcast-open.douyin.com, tnc3-alisc1.zijieapi.com, mssdk.volces.com, vod-license-m.volccdn.com, us.l.qq.com, ossweb-img.qq.com, mlol.qt.qq.com, acs.m.goofish.com, g-acs.m.goofish.com
