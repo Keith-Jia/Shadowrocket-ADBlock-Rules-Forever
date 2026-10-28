@@ -1,5 +1,5 @@
 #!name=additional
-#!desc=最后更新时间：2026-10-27 23:08
+#!desc=最后更新时间：2026-10-28 09:12
 #!homepage=https://www.ikkai.me
 #!author=Keith
 #!category=FUCKAD!!
@@ -34,6 +34,11 @@
 ^https?:\/\/mlol\.qt\.qq\.com\/go\/customize_search\/article_rank\? reject-200
 ^https?:\/\/mlol\.qt\.qq\.com\/go\/zone\/bottomtab_tip\? reject-200
 
+# 知乎：补充请求拦截；商业接口前缀已涵盖 banners_vN/app_float_corner，无需单独重复。
+(?i)^https:\/\/api\.zhihu\.com\/ad-style-service\/request$ reject-dict
+(?i)^https:\/\/api\.zhihu\.com\/commercial_api\/ reject-dict
+(?i)^https:\/\/api\.zhihu\.com\/next-render\?id=\d+&type=answer(?:&|$) reject-dict
+
 [Rule]
 # 沿用豆瓣原模块的整域拦截，作用范围不限于豆瓣。
 # zijieapi.com 的后缀规则已覆盖 tnc3-alisc1.zijieapi.com，无需重复声明。
@@ -60,5 +65,23 @@ http-response-jq ^https?:\/\/(g-)?acs\.m\.goofish\.com\/gw\/mtop\.taobao\.idleho
 # 同城：补充 template.cardEnum=ads 判据，保留其他类型的正常卡片。
 http-response-jq ^https?:\/\/(g-)?acs\.m\.goofish\.com\/gw\/mtop\.taobao\.idle\.local\.home\/ 'def clean: if (.sections | type) == "array" then .sections |= map(select((try .template.cardEnum catch null) != "ads")) else . end; . as $o | try (if type != "object" then . elif (.ret | type) != "array" then . elif (.ret | length) == 0 then . elif any(.ret[]; if type == "string" then test("^SUCCESS(?:::|$)") | not else true end) then . elif (.data | type) == "object" then .data |= clean elif (.data | type) == "string" then .data |= (. as $s | fromjson | if type == "object" then . as $d | clean | if . == $d then $s else tojson end else $s end) else . end) catch $o'
 
+# 知乎：按提供的规则补充配置清理、首页白名单和回答内容裁剪；问题流 ad_info 删除沿用 Ultimate。
+# 仅处理预期结构，保留明确错误响应；同一响应的正文重写与 Ultimate 脚本是否同时执行，需在设备上验证。
+
+# 云端配置：移除指定 HTTPDNS、QUIC 等配置项，清理保留项中原有的三个网络配置子键。
+http-response-jq (?i)^https:\/\/m-cloud\.zhihu\.com\/api\/cloud\/zhihu\/config\/all\? 'def drop_keys: {"km_httpdns_new_config_tars":true,"preFetchHttpDns":true,"httpdns_detector_use_concurrent":true,"httpdns_use_memory_cache":true,"httpdns_new_config_tars":true,"coreNetworkConf_useTars":true,"km_coreNetworkConf_useTars":true,"sugarQuicConfig":true,"quic_dns_detect_enable":true,"quicMixAB":true,"quic_downgrade_enable":true,"quic_priority_strategy":true,"quic_check_health_enable":true,"tquic_configuration":true,"networkExprimentList":true,"tars_ab_list":true,"zaSetExtraRequestHeader":true}; . as $o | try (if type != "object" then . elif has("error") then . elif (.data | type) != "object" then . elif (.data.configs | type) != "array" then . elif all(.data.configs[]; type == "object" and (.configKey | type) == "string") then .data.configs |= map(select((drop_keys[.configKey] // false) | not) | if (.configValue | type) == "object" then del(.configValue.delayHttpdns, .configValue.dnsParser, .configValue.HTTPDNS) else . end) else . end) catch $o'
+
+# 首页标签：仅保留关注、推荐、热榜和 ring_tab。
+http-response-jq (?i)^https:\/\/api\.zhihu\.com\/root\/tab\/v\d(?:\?.+)?$ '. as $o | try (if type != "object" then . elif has("error") then . elif (.tab_list | type) != "array" then . elif all(.tab_list[]; type == "object" and (.tab_type | type) == "string") then .tab_list |= map(select(.tab_type == "follow" or .tab_type == "recommend" or .tab_type == "hot" or .tab_type == "ring_tab")) else . end) catch $o'
+
+# 推荐流：仅保留 ComponentCard，区别于 Ultimate 按广告特征过滤的方式。
+http-response-jq (?i)^https:\/\/api\.zhihu\.com\/topstory\/recommend\? '. as $o | try (if type != "object" then . elif has("error") then . elif (.data | type) != "array" then . elif all(.data[]; type == "object" and (.type | type) == "string") then .data |= map(select(.type == "ComponentCard")) else . end) catch $o'
+
+# 评论：移除根评论响应中的氛围投票配置。
+http-response-jq (?i)^https:\/\/api\.zhihu\.com\/comment_v\d\/(answers|pins)\/\d+\/root_comment\? '. as $o | try (if type != "object" then . elif has("error") then . else del(.atmosphere_voting_config) end) catch $o'
+
+# 回答详情：合并同接口的字段删除和 card 裁剪；仅匹配知乎域名，保留其他片段与已有结构。
+http-response-jq (?i)^https:\/\/(api|page-info)\.zhihu\.com\/answers\/v\d\/\d+(?:\?.*)?$ '. as $o | try (if type != "object" then . elif has("error") then . else del(.third_business, .float_search_word) | if (.structured_content | type) == "object" then if (.structured_content.segments | type) == "array" then if all(.structured_content.segments[]; type == "object") then .structured_content.segments |= map(select(.type != "card")) else . end else . end else . end end) catch $o'
+
 [MITM]
-hostname = %APPEND% api.douban.com, frodo.douban.com, m.douban.com, erebor.douban.com, dg.k.jd.com, webcast-open.douyin.com, tnc3-alisc1.zijieapi.com, mssdk.volces.com, vod-license-m.volccdn.com, us.l.qq.com, ossweb-img.qq.com, mlol.qt.qq.com, acs.m.goofish.com, g-acs.m.goofish.com
+hostname = %APPEND% api.douban.com, frodo.douban.com, m.douban.com, erebor.douban.com, dg.k.jd.com, webcast-open.douyin.com, tnc3-alisc1.zijieapi.com, mssdk.volces.com, vod-license-m.volccdn.com, us.l.qq.com, ossweb-img.qq.com, mlol.qt.qq.com, acs.m.goofish.com, g-acs.m.goofish.com, m-cloud.zhihu.com, api.zhihu.com, www.zhihu.com, page-info.zhihu.com, zhida.zhihu.com
