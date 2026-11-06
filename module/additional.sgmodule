@@ -1,5 +1,5 @@
 #!name=additional
-#!desc=最后更新时间：2026-10-28 09:12
+#!desc=最后更新时间：2026-11-07 02:16
 #!homepage=https://www.ikkai.me
 #!author=Keith
 #!category=FUCKAD!!
@@ -46,6 +46,9 @@ DOMAIN-SUFFIX,zijieapi.com,REJECT
 DOMAIN-SUFFIX,volces.com,REJECT
 DOMAIN-SUFFIX,volccdn.com,REJECT
 
+# 航旅纵横：补充统计域名拦截。
+DOMAIN,analytics.umetrip.com,REJECT
+
 [Map Local]
 # 掌盟开屏广告：沿用原模块，返回空白文本
 ^https?:\/\/us\.l\.qq\.com\/exapp data-type=text data=" "
@@ -83,5 +86,12 @@ http-response-jq (?i)^https:\/\/api\.zhihu\.com\/comment_v\d\/(answers|pins)\/\d
 # 回答详情：合并同接口的字段删除和 card 裁剪；仅匹配知乎域名，保留其他片段与已有结构。
 http-response-jq (?i)^https:\/\/(api|page-info)\.zhihu\.com\/answers\/v\d\/\d+(?:\?.*)?$ '. as $o | try (if type != "object" then . elif has("error") then . else del(.third_business, .float_search_word) | if (.structured_content | type) == "object" then if (.structured_content.segments | type) == "array" then if all(.structured_content.segments[]; type == "object") then .structured_content.segments |= map(select(.type != "card")) else . end else . end else . end end) catch $o'
 
+[Script]
+# 航旅纵横：沿用杏九脚本精简首页和“我的”页面，包含首页白名单及会员卡片清理。
+# 来源：https://github.com/xingjiu29/Umetrip；原作者参考 zirawell/Ad-Cleaner。
+# 仅匹配原插件明确列出的七个网关主机；Protobuf 正文使用二进制模式和 WebView 引擎。
+# 页面效果及二进制正文兼容性需在 Shadowrocket 设备上验证。
+umetrip_clean = type=http-response,pattern=(?i)^https?:\/\/(?:umerp\.umetrip\.com(?:\.cn)?|bkclient\.umetrip\.com\.cn|(?:home|umehome|sns|appmsg)\.umetrip\.com)\/gateway\/api\/umetrip\/native(?:\?.*)?$,script-path=https://raw.githubusercontent.com/xingjiu29/Umetrip/refs/heads/main/umetrip.js?v=4,requires-body=1,max-size=300000,binary-body-mode=1,engine=webview,timeout=30,script-update-interval=86400
+
 [MITM]
-hostname = %APPEND% api.douban.com, frodo.douban.com, m.douban.com, erebor.douban.com, dg.k.jd.com, webcast-open.douyin.com, tnc3-alisc1.zijieapi.com, mssdk.volces.com, vod-license-m.volccdn.com, us.l.qq.com, ossweb-img.qq.com, mlol.qt.qq.com, acs.m.goofish.com, g-acs.m.goofish.com, m-cloud.zhihu.com, api.zhihu.com, www.zhihu.com, page-info.zhihu.com, zhida.zhihu.com
+hostname = %APPEND% api.douban.com, frodo.douban.com, m.douban.com, erebor.douban.com, dg.k.jd.com, webcast-open.douyin.com, tnc3-alisc1.zijieapi.com, mssdk.volces.com, vod-license-m.volccdn.com, us.l.qq.com, ossweb-img.qq.com, mlol.qt.qq.com, acs.m.goofish.com, g-acs.m.goofish.com, m-cloud.zhihu.com, api.zhihu.com, www.zhihu.com, page-info.zhihu.com, zhida.zhihu.com, umerp.umetrip.com, umerp.umetrip.com.cn, home.umetrip.com, bkclient.umetrip.com.cn, umehome.umetrip.com, sns.umetrip.com, appmsg.umetrip.com
