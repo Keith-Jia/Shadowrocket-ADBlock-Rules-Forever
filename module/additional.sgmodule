@@ -1,5 +1,5 @@
 #!name=additional
-#!desc=最后更新时间：2026-11-07 02:16
+#!desc=最后更新时间：2026-11-10 03:42
 #!homepage=https://www.ikkai.me
 #!author=Keith
 #!category=FUCKAD!!
@@ -39,7 +39,14 @@
 (?i)^https:\/\/api\.zhihu\.com\/commercial_api\/ reject-dict
 (?i)^https:\/\/api\.zhihu\.com\/next-render\?id=\d+&type=answer(?:&|$) reject-dict
 
+# 大麦开屏广告：拦截 welcome 接口，兼容不同 API 版本。
+^https:\/\/acs\.m\.taobao\.com\/gw\/mtop\.damai\.wireless\.home\.welcome\/ reject-dict
+
 [Rule]
+# 农行：按提供的规则拦截检测域名，效果需在设备上测试。
+# 与 Ultimate 同用时，需确保本条先于 abchina.com.cn 的 DIRECT 规则匹配。
+DOMAIN,msmp.abchina.com.cn,REJECT
+
 # 沿用豆瓣原模块的整域拦截，作用范围不限于豆瓣。
 # zijieapi.com 的后缀规则已覆盖 tnc3-alisc1.zijieapi.com，无需重复声明。
 DOMAIN-SUFFIX,zijieapi.com,REJECT
@@ -94,4 +101,4 @@ http-response-jq (?i)^https:\/\/(api|page-info)\.zhihu\.com\/answers\/v\d\/\d+(?
 umetrip_clean = type=http-response,pattern=(?i)^https?:\/\/(?:umerp\.umetrip\.com(?:\.cn)?|bkclient\.umetrip\.com\.cn|(?:home|umehome|sns|appmsg)\.umetrip\.com)\/gateway\/api\/umetrip\/native(?:\?.*)?$,script-path=https://raw.githubusercontent.com/xingjiu29/Umetrip/refs/heads/main/umetrip.js?v=4,requires-body=1,max-size=300000,binary-body-mode=1,engine=webview,timeout=30,script-update-interval=86400
 
 [MITM]
-hostname = %APPEND% api.douban.com, frodo.douban.com, m.douban.com, erebor.douban.com, dg.k.jd.com, webcast-open.douyin.com, tnc3-alisc1.zijieapi.com, mssdk.volces.com, vod-license-m.volccdn.com, us.l.qq.com, ossweb-img.qq.com, mlol.qt.qq.com, acs.m.goofish.com, g-acs.m.goofish.com, m-cloud.zhihu.com, api.zhihu.com, www.zhihu.com, page-info.zhihu.com, zhida.zhihu.com, umerp.umetrip.com, umerp.umetrip.com.cn, home.umetrip.com, bkclient.umetrip.com.cn, umehome.umetrip.com, sns.umetrip.com, appmsg.umetrip.com
+hostname = %APPEND% api.douban.com, frodo.douban.com, m.douban.com, erebor.douban.com, dg.k.jd.com, webcast-open.douyin.com, tnc3-alisc1.zijieapi.com, mssdk.volces.com, vod-license-m.volccdn.com, us.l.qq.com, ossweb-img.qq.com, mlol.qt.qq.com, acs.m.goofish.com, g-acs.m.goofish.com, acs.m.taobao.com, m-cloud.zhihu.com, api.zhihu.com, www.zhihu.com, page-info.zhihu.com, zhida.zhihu.com, umerp.umetrip.com, umerp.umetrip.com.cn, home.umetrip.com, bkclient.umetrip.com.cn, umehome.umetrip.com, sns.umetrip.com, appmsg.umetrip.com
