@@ -1,5 +1,5 @@
 #!name=additional
-#!desc=最后更新时间：2026-11-10 03:42
+#!desc=最后更新时间：2026-11-10 18:10
 #!homepage=https://www.ikkai.me
 #!author=Keith
 #!category=FUCKAD!!
@@ -43,6 +43,15 @@
 ^https:\/\/acs\.m\.taobao\.com\/gw\/mtop\.damai\.wireless\.home\.welcome\/ reject-dict
 
 [Rule]
+# 抖音商城：放行电商接口、页面与资源；Additional 需排在 Ultimate 之前。
+# ecombdpage.com 已覆盖 render.ecombdpage.com。
+DOMAIN-SUFFIX,ecombdapi.com,DIRECT
+DOMAIN-SUFFIX,ecombdpage.com,DIRECT
+DOMAIN-SUFFIX,ecombdimg.com,DIRECT
+DOMAIN-SUFFIX,ecombdstatic.com,DIRECT
+DOMAIN,ecomuser.snssdk.com,DIRECT
+DOMAIN-SUFFIX,temai.snssdk.com,DIRECT
+
 # 农行：按提供的规则拦截检测域名，效果需在设备上测试。
 # 与 Ultimate 同用时，需确保本条先于 abchina.com.cn 的 DIRECT 规则匹配。
 DOMAIN,msmp.abchina.com.cn,REJECT
